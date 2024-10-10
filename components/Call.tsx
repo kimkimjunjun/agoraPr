@@ -61,6 +61,7 @@ const Call = (props: { appId: string; channelName: string }) => {
         joinChannel();
     }, [appId, channelName, uid, isJoining, isConnected, client]);
 
+    console.log(localCameraTrack, remoteUsers)
     return (
         <div className="flex flex-col items-center">
             <h2 className="text-lg font-bold">Agora Video Call</h2>
@@ -89,19 +90,25 @@ const Call = (props: { appId: string; channelName: string }) => {
 };
 
 const RemoteUser = ({ user }: { user: IAgoraRTCRemoteUser }) => {
-    const { videoTrack } = user;
+    const { videoTrack, hasVideo } = user;
 
     return (
         <div>
-            {videoTrack && (
-                <video
-                    ref={(ref) => {
-                        if (ref) {
-                            videoTrack.play(ref);
-                        }
-                    }}
-                    style={{ width: "400px", height: "300px" }}
-                />
+            {hasVideo ? (
+                videoTrack ? (
+                    <video
+                        ref={(ref) => {
+                            if (ref) {
+                                videoTrack.play(ref);
+                            }
+                        }}
+                        style={{ width: "400px", height: "300px" }}
+                    />
+                ) : (
+                    <p>비디오를 초기화 중입니다...</p>
+                )
+            ) : (
+                <p>사용자가 비디오를 전송하지 않습니다.</p>
             )}
         </div>
     );
