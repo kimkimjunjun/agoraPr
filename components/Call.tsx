@@ -1,38 +1,31 @@
-"use client";
-import React, { useEffect } from "react";
-import AgoraRTC, {
-    AgoraRTCProvider,
-    useJoin,
-    useLocalCameraTrack,
-    useLocalMicrophoneTrack,
-    usePublish,
-    useRemoteUsers,
-    useRTCClient,
-    IAgoraRTCRemoteUser, // Agora SDK에서 제공하는 타입 임포트
-} from "agora-rtc-react";
-import { LocalVideoTrack } from "agora-rtc-react";
+"use client"
 
-const Call = (props: { appId: string; channelName: string }) => {
+import AgoraRTC, { IAgoraRTCRemoteUser, RemoteUser, useJoin, useLocalCameraTrack, useLocalMicrophoneTrack, usePublish, useRemoteUsers, useRTCClient } from "agora-rtc-react";
+import { useEffect, useState } from "react";
+
+export const Call = (props: { appId: string; channelName: string }) => {
     const { appId, channelName } = props;
 
     const client = useRTCClient(AgoraRTC.createClient({ codec: "vp8", mode: "rtc" }));
     const { localMicrophoneTrack } = useLocalMicrophoneTrack();
     const { localCameraTrack } = useLocalCameraTrack();
+
+    // 원격 사용자들을 가져옵니다.
     const remoteUsers = useRemoteUsers();
 
-    const { data: uid, isLoading: isJoining, isConnected } = useJoin(
-        {
-            appid: appId,
-            channel: channelName,
-            token: null,
-        },
-        true
-    );
+    const { data: uid, isLoading: isJoining, isConnected } = useJoin({
+        appid: appId,
+        channel: channelName,
+        token: null,
+    }, true);
 
     const { isLoading: isPublishing } = usePublish(
         [localMicrophoneTrack, localCameraTrack],
         true
     );
+
+    // 통화 수락 상태를 관리하는 상태 변수
+    const [acceptedUsers, setAcceptedUsers] = useState<{ [key: string]: boolean }>({});
 
     useEffect(() => {
         const publishTracks = async () => {
@@ -57,71 +50,35 @@ const Call = (props: { appId: string; channelName: string }) => {
                 console.error("Error joining channel:", e);
             }
         };
-
         joinChannel();
     }, [appId, channelName, uid, isJoining, isConnected, client]);
 
-    console.log(localCameraTrack, remoteUsers)
+    // 사용자 수락 처리
+    const handleAccept = async (user: IAgoraRTCRemoteUser) => {
+        setAcceptedUsers(prev => ({ ...prev, [user.uid]: true }));
+        await client.subscribe(user, "video");
+        await client.subscribe(user, "audio");
+    };
+    console.log(remoteUsers)
     return (
         <div className="flex flex-col items-center">
             <h2 className="text-lg font-bold">Agora Video Call</h2>
             <div className="flex flex-col">
-                {localCameraTrack ? (
-                    <div>
-                        <LocalVideoTrack
-                            track={localCameraTrack}
-                            style={{ width: "400px", height: "300px" }}
-                            play
-                        />
-                    </div>
-                ) : (
-                    <p>카메라를 초기화 중입니다...</p>
-                )}
+                <div id="remote-playerlist">
+                    {remoteUsers.map((user) => (
+                        <div key={user.uid} className="flex flex-col items-center">
+                            {user.hasAudio && (
+                                <>
+                                    <p>{`User ${user.uid}`}</p>
+                                    <button onClick={() => handleAccept(user)}>수락</button>
+                                    {acceptedUsers[user.uid] && <RemoteUser user={user} />}
+                                </>
+                            )}
 
-                {remoteUsers.map((user) => (
-                    <div key={user.uid}>
-                        <h3>User ID: {user.uid}</h3>
-                        <RemoteUser user={user} />
-                    </div>
-                ))}
+                        </div>
+                    ))}
+                </div>
             </div>
         </div>
     );
 };
-
-const RemoteUser = ({ user }: { user: IAgoraRTCRemoteUser }) => {
-    const { videoTrack, hasVideo } = user;
-
-    return (
-        <div>
-            {hasVideo ? (
-                videoTrack ? (
-                    <video
-                        ref={(ref) => {
-                            if (ref) {
-                                videoTrack.play(ref);
-                            }
-                        }}
-                        style={{ width: "400px", height: "300px" }}
-                    />
-                ) : (
-                    <p>비디오를 초기화 중입니다...</p>
-                )
-            ) : (
-                <p>사용자가 비디오를 전송하지 않습니다.</p>
-            )}
-        </div>
-    );
-};
-
-const CallWrapper = (props: { appId: string; channelName: string }) => {
-    const client = useRTCClient(AgoraRTC.createClient({ codec: "vp8", mode: "rtc" }));
-
-    return (
-        <AgoraRTCProvider client={client}>
-            <Call appId={props.appId} channelName={props.channelName} />
-        </AgoraRTCProvider>
-    );
-};
-
-export default CallWrapper;
