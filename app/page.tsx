@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import AgoraRTC, { AgoraRTCProvider, useJoin, useLocalCameraTrack, useLocalMicrophoneTrack, usePublish, useRemoteUsers, useRTCClient, IAgoraRTCRemoteUser, useRemoteAudioTracks, useRemoteUserTrack } from 'agora-rtc-react';
-import { LocalVideoTrack } from 'agora-rtc-react';
+import AgoraRTC, { AgoraRTCProvider, useJoin, useLocalCameraTrack, useLocalMicrophoneTrack, usePublish, useRemoteUsers, useRTCClient, IAgoraRTCRemoteUser, useRemoteUserTrack } from 'agora-rtc-react';
 
 const Call = (props: { appId: string; channelName: string }) => {
   const { appId, channelName } = props;
