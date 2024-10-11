@@ -28,7 +28,9 @@ export const Call = (props: { appId: string; channelName: string }) => {
     const [acceptedUsers, setAcceptedUsers] = useState<{ [key: string]: boolean }>({});
 
     useEffect(() => {
+
         const publishTracks = async () => {
+
             if (isConnected && localMicrophoneTrack && localCameraTrack && !isPublishing) {
                 try {
                     await client.publish([localMicrophoneTrack, localCameraTrack]);

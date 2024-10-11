@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { CallWrapper } from '@/components/CallWrapper';
+import CallWrapper from '@/components/CallWrapper';
 
 
 export default function Home() {
@@ -22,7 +22,7 @@ export default function Home() {
         <input name="channel" type="text" placeholder="Enter Channel Name" required />
         <button type="submit">Join</button>
       </form>
-      {appId && channelName && <CallWrapper appId={appId} channelName={channelName} />}
+      {typeof window !== 'undefined' && appId && channelName && <CallWrapper appId={appId} channelName={channelName} />}
     </div>
   );
 }
