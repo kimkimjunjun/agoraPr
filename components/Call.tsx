@@ -8,8 +8,8 @@ export const Call = (props: { appId: string; channelName: string }) => {
     const { appId, channelName } = props;
 
     const client = useRTCClient(AgoraRTC.createClient({ codec: "vp8", mode: "rtc" }));
-    const { localMicrophoneTrack } = useLocalMicrophoneTrack();
-    const { localCameraTrack } = useLocalCameraTrack();
+    const { localMicrophoneTrack, error: micError } = useLocalMicrophoneTrack();
+    const { localCameraTrack, error: camError } = useLocalCameraTrack();
     const remoteUsers = useRemoteUsers();
 
     const { data: uid, isLoading: isJoining, isConnected } = useJoin({
@@ -29,6 +29,10 @@ export const Call = (props: { appId: string; channelName: string }) => {
         const publishTracks = async () => {
             if (isConnected && localMicrophoneTrack && localCameraTrack && !isPublishing) {
                 try {
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: true,
+                        audio: true,
+                    });
                     await client.publish([localMicrophoneTrack, localCameraTrack]);
                 } catch (e) {
                     console.error("Error publishing tracks:", e);
@@ -40,8 +44,12 @@ export const Call = (props: { appId: string; channelName: string }) => {
 
     useEffect(() => {
         const joinChannel = async () => {
-            if (!isJoining && !isConnected) {
-                await client.join(appId, channelName, null, uid);
+            if (!isJoining && !isConnected && uid) {
+                try {
+                    await client.join(appId, channelName, null, uid);
+                } catch (e) {
+                    console.error("Error joining channel:", e);
+                }
             }
         };
         joinChannel();
@@ -49,14 +57,25 @@ export const Call = (props: { appId: string; channelName: string }) => {
 
     const handleAccept = async (user: IAgoraRTCRemoteUser) => {
         setAcceptedUsers(prev => ({ ...prev, [user.uid]: true }));
-        // 비디오와 오디오 구독
-        await client.subscribe(user, "video");
-        await client.subscribe(user, "audio");
+
+        // 클라이언트가 채널에 연결된 경우에만 구독
+        if (isConnected) {
+            try {
+                await client.subscribe(user, "video");
+                await client.subscribe(user, "audio");
+            } catch (e) {
+                console.error("Error subscribing to user:", e);
+            }
+        } else {
+            console.warn("Cannot subscribe, client is not connected.");
+        }
     };
 
     return (
         <div className="flex flex-col items-center">
             <h2 className="text-lg font-bold">Agora Video Call</h2>
+            {micError && <p className="text-red-500">마이크 권한을 허용해주세요.</p>}
+            {camError && <p className="text-red-500">카메라 권한을 허용해주세요.</p>}
             <div className="flex flex-col">
                 <div id="remote-playerlist">
                     {remoteUsers.map((user) => (
