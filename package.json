@@ -12,7 +12,10 @@
     "agora-rtc-react": "^2.3.0",
     "next": "14.2.15",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "react-player": "^2.16.0",
+    "video.js": "^8.18.1",
+    "videojs-contrib-hls": "^5.15.0"
   },
   "devDependencies": {
     "@types/node": "^20",

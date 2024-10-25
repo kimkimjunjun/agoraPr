@@ -2,11 +2,13 @@
 
 import React, { useState } from 'react';
 import CallWrapper from '@/components/CallWrapper';
+import VideoPlayer from '@/components/VideoPlayer';
 
 
 export default function Home() {
   const [appId, setAppId] = useState('');
   const [channelName, setChannelName] = useState('');
+  const hlsUrl = 'http://localhost:5000/hls/stream.m3u8';
 
   const handleJoin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -14,6 +16,7 @@ export default function Home() {
     setAppId(form.appId.value);
     setChannelName(form.channel.value);
   };
+
 
   return (
     <div className="container">
@@ -23,6 +26,7 @@ export default function Home() {
         <button type="submit">Join</button>
       </form>
       {typeof window !== 'undefined' && appId && channelName && <CallWrapper appId={appId} channelName={channelName} />}
+      <VideoPlayer hlsUrl={hlsUrl} />
     </div>
   );
 }

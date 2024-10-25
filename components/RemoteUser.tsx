@@ -3,7 +3,7 @@
 import { IAgoraRTCRemoteUser, useRemoteUserTrack } from "agora-rtc-react";
 import { useEffect, useRef } from "react";
 
-export const RemoteUser = ({ user }: { user: IAgoraRTCRemoteUser }) => {
+export const RemoteUser = ({ user, acceptedUsers }: { user: IAgoraRTCRemoteUser, acceptedUsers: any }) => {
     const { track: videoTrack, isLoading: isVideoLoading } = useRemoteUserTrack(user, "video");
     const { track: audioTrack, isLoading: isAudioLoading } = useRemoteUserTrack(user, "audio");
     const videoRef = useRef<HTMLVideoElement>(null); // ref 추가
@@ -14,13 +14,16 @@ export const RemoteUser = ({ user }: { user: IAgoraRTCRemoteUser }) => {
             videoTrack.play(videoRef.current);
         }
     }, [videoTrack]);
-
     // 오디오 재생
     useEffect(() => {
-        if (audioTrack) {
+        if (audioTrack && acceptedUsers[user.uid]) {
             audioTrack.play();  // 오디오 트랙을 자동으로 재생
+        } else {
+            audioTrack?.stop();
         }
-    }, [audioTrack]);
+        console.log(acceptedUsers[user.uid], audioTrack)
+    }, [acceptedUsers[user.uid], audioTrack]);
+
 
     return (
         <div id={`player-${user.uid}`}>
@@ -30,7 +33,7 @@ export const RemoteUser = ({ user }: { user: IAgoraRTCRemoteUser }) => {
                 <video
                     ref={videoRef} // ref 사용
                     id={`video-${user.uid}`}
-                    style={{ width: "800px", height: "500px" }}
+                    style={{ width: "600px", height: "500px" }}
                 />
             )}
 
